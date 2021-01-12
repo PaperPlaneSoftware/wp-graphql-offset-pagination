@@ -263,5 +263,23 @@ class Loader
                 'description' => 'Paginate users with offsets',
             ]
         );
+
+        if(count(
+            preg_grep(
+                '/^wp-graphql-woocommerce.*\/wp-graphql-woocommerce.php$/',
+                apply_filters('active_plugins', get_option('active_plugins'))
+            )) != 0
+        ){
+            foreach ( \WP_GraphQL_WooCommerce::get_post_types() as $post_type ) {
+                self::add_post_type_fields( get_post_type_object( $post_type ) );
+            }
+            
+            add_filter( 'graphql_product_connection_query_args',  function($query_args, $source, $args, $context, $info) {
+                if ( isset( $args['where']['offsetPagination']['offset'] ) ) {
+                        $query_args['offset'] = $args['where']['offsetPagination']['offset'];
+                }
+                return $query_args;
+            }, 10, 5);
+        }
     }
 }
